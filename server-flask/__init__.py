@@ -22,7 +22,7 @@ def handleClick(data):
 def handle_stream():
     global timer
     timer += 1
-    # threading.Timer(1000, handle_stream).start()
+    threading.Timer(1000, handle_stream).start()
     return timer
 
 
