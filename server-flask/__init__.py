@@ -1,13 +1,21 @@
 import threading
+import sched
+import time
+import datetime
 from flask import Flask
 from flask_socketio import SocketIO
-
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
 
-counter = 0
+scheduler = sched.scheduler(time.time, time.sleep)
+
 timer = 0
+
+
+def increase_counter():
+    threading.Timer(1, increase_counter).start()
+    socketio.emit('getcounter', str(datetime.datetime.now()))
 
 
 @app.route('/', strict_slashes=False)
@@ -15,21 +23,12 @@ def index():
     return 'Hello there'
 
 
-@socketio.on('click')
-def handleClick(data):
+@socketio.on('hello')
+def handle_hello(msg):
+    print(msg)
+
+
+@socketio.on('getcounter')
+def handle_get_counter(data):
     print(data)
-
-def handle_stream():
-    global timer
-    timer += 1
-    threading.Timer(1000, handle_stream).start()
-    return timer
-
-
-@socketio.on('connect')
-def handle_connect():
-    global counter
-    counter += 1
-    print(f'{counter} New client connected')
-    socketio.emit('stream', handle_stream())
-    # socketio.send('stream', '???')
+    increase_counter()

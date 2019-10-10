@@ -24,9 +24,12 @@ io.on('connect', socket => {
     socket.emit('getcounter', counter)
   }, 1000)
 
+  socket.on('hello', msg => {
+    console.log(msg)
+  })
+  
   socket.on('disconnect', () => console.log('Client disconnected'))
 })
-
 server.listen(port, err => {
   if (err) throw err
 

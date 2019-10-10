@@ -4,7 +4,7 @@
   "main": "server.js",
   "license": "MIT",
   "scripts": {
-    "dev:next": "nodemon --exec babel-node server.next.js",
+    "dev:next": "next dev",
     "dev:socket": "nodemon --exec babel-node server.socket.js"
   },
   "dependencies": {
