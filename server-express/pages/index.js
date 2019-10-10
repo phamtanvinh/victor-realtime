@@ -10,6 +10,10 @@ const Index = () => {
   const [timerFlask, setTimeFlask] = useState(null)
 
   useEffect(() => {
+      socketFlask.emit('getcounter', 'Get counter')
+  }, [])
+
+  useEffect(() => {
     socketExpress.on('getcounter', respone => {
       setCounterExpress(respone)
     })
@@ -21,7 +25,7 @@ const Index = () => {
     })
   }, [timerFlask])
 
-  const handleOnClick = e => {
+  const sendToExpressSocket = e => {
     socketExpress.emit('hello', 'Hello express')
   }
 
@@ -29,18 +33,13 @@ const Index = () => {
     socketFlask.emit('hello', 'Hello flask')
   }
 
-  const handleFlaskCounter = e => {
-    socketFlask.emit('getcounter', 'Get counter')
-  }
-
   return (
     <div>
       <p>{JSON.stringify(counterExpress)}</p>
-      <button onClick={handleOnClick}>Send message to node socket</button>
+      <button onClick={sendToExpressSocket}>Send message to node socket</button>
 
       <p>{JSON.stringify(timerFlask)}</p>
       <button onClick={sendToFlaskSocket}>Send message to flask socket</button>
-      <button onClick={handleFlaskCounter}>Get counter flask socket</button>
     </div>
   )
 }

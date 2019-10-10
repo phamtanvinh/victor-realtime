@@ -1,6 +1,9 @@
 .vscode/
-node_modules/
 .next/
+
+node_modules/
+tmp/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

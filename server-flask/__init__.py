@@ -1,16 +1,10 @@
 import threading
-import sched
-import time
 import datetime
 from flask import Flask
 from flask_socketio import SocketIO
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
-
-scheduler = sched.scheduler(time.time, time.sleep)
-
-timer = 0
 
 
 def increase_counter():
