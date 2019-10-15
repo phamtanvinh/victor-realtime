@@ -1,6 +1,7 @@
 import express from 'express'
 import http from 'http'
 import socketIO from 'socket.io'
+import kafka from 'kafka-node'
 
 const port = process.env.PORT || 3600
 let interval
@@ -12,8 +13,20 @@ app.get('/', (req, res) => {
 })
 
 const server = http.createServer(app)
-
 const io = socketIO(server)
+const kafkaClient = new kafka.KafkaClient({ kafkaHost: '192.168.56.100:39092' })
+const topics = [{ topic: 'test' }]
+const options = {
+  autoCommit: true,
+  fetchMaxWaitMs: 1000,
+  fetchMaxBytes: 1024 * 1024,
+  encoding: 'buffer'
+}
+const consumer = new kafka.Consumer(kafkaClient, topics, options)
+
+consumer.on('message', async message => {
+  console.log(`Kafka send: ${message}`)
+})
 
 io.on('connect', socket => {
   console.log('New client connected')
@@ -27,9 +40,11 @@ io.on('connect', socket => {
   socket.on('hello', msg => {
     console.log(msg)
   })
-  
+
   socket.on('disconnect', () => console.log('Client disconnected'))
 })
+
+
 server.listen(port, err => {
   if (err) throw err
 

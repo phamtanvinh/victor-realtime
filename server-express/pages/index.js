@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import io from 'socket.io-client'
+import kafka from 'kafka-node'
 
 const socketExpress = io('http://localhost:3600')
 const socketFlask = io('http://localhost:3500')
+// const kafkaClient = new kafka.KafkaClient()
 
 const Index = () => {
   const [counterExpress, setCounterExpress] = useState(null)
   const [timerFlask, setTimeFlask] = useState(null)
+  // const consumer = new kafka.Consumer(kafkaClient, [{ topic: 'test' }], {
+  //   autoCommit: true
+  // })
 
   useEffect(() => {
-      socketFlask.emit('getcounter', 'Get counter')
+    // consumer.on('message', message => console.log(message))
   }, [])
 
   useEffect(() => {
