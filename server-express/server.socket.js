@@ -22,10 +22,11 @@ const options = {
   fetchMaxBytes: 1024 * 1024,
   encoding: 'buffer'
 }
-const consumer = new kafka.Consumer(kafkaClient, topics, options)
 
+const consumer = new kafka.Consumer(kafkaClient, topics, options)
 consumer.on('message', async message => {
-  console.log(`Kafka send: ${message}`)
+  console.log(`Kafka send: ${message.value}`)
+  io.emit('kafka-message', message.value)
 })
 
 io.on('connect', socket => {

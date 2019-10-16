@@ -1236,3 +1236,4 @@ back_pressure_strategy:
 #
 # otc_backlog_expiration_interval_ms: 200
 authenticator: PasswordAuthenticator
+enable_user_defined_functions: true
