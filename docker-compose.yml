@@ -16,14 +16,19 @@ services:
       nproc: 1024
   
   postgres:
-    build:
+    # image: victor-postgres
+    build: 
       context: ./src/postgres
+    command: postgres -c config_file=/home/config/postgresql.conf
     container_name: postgres
+    privileged: true
     ports: 
       - 5432:5432
     volumes: 
       - postgres_data:/var/lib/postgresql/data
-    environment: 
+      - ./src/postgres:/home/config:ro
+    environment:
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Aa123456}
   
   pgadmin:
