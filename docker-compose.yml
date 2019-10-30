@@ -19,7 +19,7 @@ services:
     # image: victor-postgres
     build: 
       context: ./src/postgres
-    command: postgres -c config_file=/home/config/postgresql.conf
+    command: postgres -c config_file=/home/config/postgres.conf
     container_name: postgres
     privileged: true
     ports: 
