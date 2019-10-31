@@ -1,0 +1,9 @@
+[mysqld]
+server-id = 191031
+log_bin = mysql-bin
+user = mysql
+binlog_expire_logs_seconds = 2592000
+binlog_format = row
+skip-host-cache
+skip-name-resolve
+skip-symbolic-links
