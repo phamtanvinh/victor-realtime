@@ -45,8 +45,12 @@ RUN apt-get update \
         libprotobuf-c1 \
     && rm -rf /var/lib/apt/lists/*
 
+
 COPY --from=build /usr/lib/postgresql/$PG_MAJOR/lib/decoderbufs.so /usr/lib/postgresql/$PG_MAJOR/lib/wal2json.so /usr/lib/postgresql/$PG_MAJOR/lib/
 COPY --from=build /usr/share/postgresql/$PG_MAJOR/extension/decoderbufs.control /usr/share/postgresql/$PG_MAJOR/extension/
 
-COPY ./postgres.conf /usr/share/postgresql/postgresql.conf
+COPY ./postgres.conf /usr/share/postgresql/postgres.conf
+COPY ./pg_hba.conf /usr/share/postgresql/pg_hba.conf
 COPY ./entrypoint.d /docker-entrypoint-initdb.d
+
+RUN chown -R postgres:postgres /usr/share/postgresql
