@@ -55,6 +55,7 @@ services:
     build:
       context: ./postgres
     command: postgres -c config_file=/usr/share/postgresql/postgresql.conf
+    # privileged: true
     ports:
       - 5432:5432
     environment:
