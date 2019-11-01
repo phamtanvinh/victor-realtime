@@ -1,5 +1,5 @@
 {
-    "name": "inventory-connector",
+    "name": "source-mysql-inventory",
     "config": {
         "connector.class": "io.debezium.connector.mysql.MySqlConnector",
         "tasks.max": "1",
@@ -9,7 +9,7 @@
         "database.password": "dbz",
         "database.server.id": "191031",
         "database.allowPublicKeyRetrieval": "true",
-        "database.server.name": "dbserver1",
+        "database.server.name": "mysqlserver",
         "database.whitelist": "inventory",
         "database.history.kafka.bootstrap.servers": "broker:9092",
         "database.history.kafka.topic": "schema-changes.inventory",

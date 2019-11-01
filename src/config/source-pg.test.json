@@ -1,5 +1,5 @@
 {
-    "name": "source-pg",
+    "name": "source-pg-test",
     "config": {
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "tasks.max": "1",
@@ -8,14 +8,13 @@
         "database.user": "postgresuser",
         "database.password": "postgrespw",
         "database.dbname" : "inventory",
-        "database.server.name": "dbserver1",
+        "database.server.name": "pgserver",
         "schema.whitelist": "test",
         "database.history.kafka.bootstrap.servers": "broker:9092",
         "database.history.kafka.topic": "schema-changes.test",
-        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-        "value.converter": "io.confluent.connect.avro.AvroConverter",
-        "key.converter.schemas.enable": "false",
-        "transforms": "unwrap",
-        "transforms.unwrap.type": "io.debezium.transforms.UnwrapFromEnvelope"    
+        "transforms": "route",
+        "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+        "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+        "transforms.route.replacement": "$3"
     }
 }

@@ -51,10 +51,10 @@ services:
       MYSQL_PASSWORD: mysqlpw
   
   postgres:
-    # image: victor/postgres
+    image: victor/postgres
     build:
       context: ./postgres
-    command: postgres -c config_file=/usr/share/postgresql/postgresql.conf
+    command: postgres -c config_file=/usr/share/postgresql/postgres.conf
     ports:
       - 5432:5432
     environment:
@@ -97,6 +97,7 @@ services:
       ELASTICSEARCH_HOSTS: http://es:9200
 
   connect:
+    image: victor/connect
     build:
       context: ./connect
     ports:

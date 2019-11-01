@@ -1,9 +1,9 @@
-create database test;
+create database inventory;
+connect inventory;
+create schema test;
+set search_path to test;
 
-create table test_table (_id serial not null, _val varchar(512), primary key (_id) );
+create table test_table (test_id serial not null, test_val varchar(512), primary key (_id) );
 
-insert into test_table VALUES(2, 'test-val');
-
-update test_table set _val = 'something' where _id = 2;
-
-ALTER TABLE test_table REPLICA IDENTITY FULL;
+insert into test_table VALUES(default, 'my name is pham tan vinh');
+insert into test_table VALUES(default, 'hi there, I''m still alive);
