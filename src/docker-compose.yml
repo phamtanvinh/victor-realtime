@@ -20,8 +20,9 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     
@@ -50,10 +51,10 @@ services:
       POSTGRES_PASSWORD: postgrespw
       POSTGRES_DB: inventory
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.3.2
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.4
     ports:
-     - "9200:9200"
+     - 9200:9200
     environment:
       http.host: '0.0.0.0'
       transport.host: '127.0.0.1'
@@ -69,9 +70,9 @@ services:
       - broker
       - mysql
       - postgres
-      - elasticsearch
+      - es
     environment:
-      BOOTSTRAP_SERVERS: broker:29092
+      BOOTSTRAP_SERVERS: broker:9092
       GROUP_ID: 1
       CONFIG_STORAGE_TOPIC: my_connect_configs
       OFFSET_STORAGE_TOPIC: my_connect_offset

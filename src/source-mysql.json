@@ -11,7 +11,7 @@
         "database.allowPublicKeyRetrieval": "true",
         "database.server.name": "dbserver1",
         "database.whitelist": "inventory",
-        "database.history.kafka.bootstrap.servers": "broker:29092",
+        "database.history.kafka.bootstrap.servers": "broker:9092",
         "database.history.kafka.topic": "schema-changes.inventory",
         "transforms": "route",
         "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
