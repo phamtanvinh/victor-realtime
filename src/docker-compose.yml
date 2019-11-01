@@ -39,10 +39,10 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
     
   mysql:
+    image: victor/mysql
     build:
       context: ./mysql
-    volumes:
-      - ./mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+    privileged: true
     ports:
       - 3306:3306
     environment:
@@ -51,11 +51,10 @@ services:
       MYSQL_PASSWORD: mysqlpw
   
   postgres:
+    image: victor/postgres
     build:
       context: ./postgres
-    command: postgres -c config_file=/home/config/postgres.conf
-    volumes:
-      - ./postgres:/home/config:ro
+    command: postgres -c config_file=/usr/share/postgresql/postgresql.conf
     ports:
       - 5432:5432
     environment:
@@ -83,6 +82,17 @@ services:
       http.host: '0.0.0.0'
       transport.host: '127.0.0.1'
       xpack.security.enabled: 'false'
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.8.4
+    ports: 
+      - 5601:5601
+    depends_on: 
+      - es
+    links: 
+      - es
+    environment: 
+      ELASTICSEARCH_HOSTS: http://es:9200
 
   connect:
     build:
