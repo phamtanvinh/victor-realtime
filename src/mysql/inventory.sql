@@ -4,8 +4,9 @@ CREATE USER 'debezium' IDENTIFIED BY 'dbz';
 GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT  ON *.* TO 'debezium';
 
 CREATE DATABASE inventory;
+CREATE DATABASE demo;
 
-GRANT ALL PRIVILEGES ON inventory.* TO 'mysqluser'@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'mysqluser'@'%';
 
 USE inventory;
 
@@ -103,3 +104,17 @@ INSERT INTO geom
 VALUES(default, ST_GeomFromText('POINT(1 1)'), NULL),
       (default, ST_GeomFromText('LINESTRING(2 1, 6 6)'), NULL),
       (default, ST_GeomFromText('POLYGON((0 5, 2 5, 2 7, 0 7, 0 5))'), NULL);
+
+USE demo;
+
+CREATE TABLE orders (
+  id INTEGER NOT NULL, 
+  created VARCHAR(255), 
+  product VARCHAR(255), 
+  qty INTEGER, 
+  price FLOAT, 
+  PRIMARY KEY (id, created)
+);
+
+insert into orders values ( 1, "2016-05-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);
+insert into orders values ( 2, "2016-05-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);
