@@ -95,6 +95,25 @@ services:
       - es
     environment: 
       ELASTICSEARCH_HOSTS: http://es:9200
+  
+  cassandra:
+    image: victor/cassandra
+    build:
+      context: ./cassandra
+    ports:
+      - 7000:7000
+      - 9042:9042
+    links:
+      - schema-registry
+    environment:
+      MAX_HEAP_SIZE: 256M
+      HEAP_NEWSIZE: 128M
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
+    ulimits:
+      nproc: 1024
 
   connect:
     image: victor/connect
@@ -105,6 +124,7 @@ services:
       - 5005:5005
     links:
       - broker
+      - schema-registry
       - mysql
       - postgres
       - es
@@ -117,5 +137,7 @@ services:
       STATUS_STORAGE_TOPIC: my_source_connect_status
       KAFKA_CONNECT_PLUGINS_DIR: /kafka/connect,/kafka/plugins
 
+
 volumes: 
   pg_data: {}
+  cassandra_data: {}

@@ -1,4 +1,6 @@
 # source configs
+
+# postgres source
 curl -X DELETE http://localhost:8083/connectors/source-pg-test
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
@@ -26,12 +28,13 @@ curl -i -X POST http://localhost:8083/connectors/ \
     }'
 
 
-
+# mysql source
 curl -X DELETE http://localhost:8083/connectors/source-mysql-inventory
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
      -H  "Content-Type:application/json" \
-     -d '{
+     -d '
+    {
         "name": "source-mysql-inventory",
         "config": {
             "connector.class": "io.debezium.connector.mysql.MySqlConnector",
@@ -53,9 +56,42 @@ curl -i -X POST http://localhost:8083/connectors/ \
         }
     }'
 
+# mysql avro source
+curl -X DELETE http://localhost:8083/connectors/source-mysql-demo
+curl -i -X POST http://localhost:8083/connectors/ \
+     -H "Accept:application/json" \
+     -H  "Content-Type:application/json" \
+     -d '
+    {
+        "name": "source-mysql-demo",
+        "config": {
+            "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+            "tasks.max": "1",
+            "database.hostname": "mysql",
+            "database.port": "3306",
+            "database.user": "debezium",
+            "database.password": "dbz",
+            "database.server.id": "191031",
+            "database.server.name": "mysqlserver",
+            "database.whitelist": "demo",
+            "database.history.kafka.bootstrap.servers": "broker:9092",
+            "database.history.kafka.topic": "schema-changes.demo",
+            "key.converter": "io.confluent.connect.avro.AvroConverter",
+            "key.converter.schema.registry.url": "http://schema-registry:8081",
+            "value.converter": "io.confluent.connect.avro.AvroConverter",
+            "value.converter.schema.registry.url": "http://schema-registry:8081",
+            "internal.key.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "internal.value.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "transforms": "route",
+            "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+            "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+            "transforms.route.replacement": "$3"
+        }
+    }'
 
-# sink configs
+# Sink configs
 
+# elasticsearch sink
 curl -X DELETE http://localhost:8083/connectors/sink-es-testtable
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
@@ -105,7 +141,7 @@ curl -i -X POST http://localhost:8083/connectors/ \
     }'
 
 
-
+# postgres sink
 curl -X DELETE http://localhost:8083/connectors/sink-pg-customers
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
@@ -127,4 +163,32 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "pk.fields": "id",
             "pk.mode": "record_key"
         }
+    }'
+
+
+# cassandra sink
+curl -X DELETE http://localhost:8083/connectors/sink-cassandra-demo
+curl -i -X POST http://localhost:8083/connectors/ \
+     -H "Accept:application/json" \
+     -H  "Content-Type:application/json" \
+     -d '
+     {
+        "name": "sink-cassandra-demo",
+        "config": {
+            "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
+            "tasks.max":"1",
+            "topics":"orders",
+            "key.converter":"io.confluent.connect.avro.AvroConverter",
+            "key.converter.schema.registry.url":"http://schema-registry:8081",
+            "value.converter":"io.confluent.connect.avro.AvroConverter",
+            "value.converter.schema.registry.url":"http://schema-registry:8081",
+            "connect.cassandra.contact.points":"cassandra",
+            "connect.cassandra.port": "9042",
+            "connect.cassandra.key.space": "demo",
+            "connect.cassandra.username":"cassandra",
+            "connect.cassandra.password":"cassandra",
+            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders",
+            "type.name":"record",
+            "name":"sink-cassandra-demo"
+        }   
     }'
