@@ -204,16 +204,16 @@ curl -i -X POST http://localhost:8083/connectors/ \
         "config": {
             "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
             "tasks.max":"1",
-            "topics":"orders",
-            "key.converter":"io.confluent.connect.avro.AvroConverter",
+            "topics":"mysqlserver.demo.orders",
+            "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schema.registry.url":"http://schema-registry:8081",
-            "value.converter":"io.confluent.connect.avro.AvroConverter",
+            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
             "value.converter.schema.registry.url":"http://schema-registry:8081",
             "connect.cassandra.contact.points":"cassandra",
             "connect.cassandra.port": "9042",
             "connect.cassandra.key.space": "demo",
             "connect.cassandra.username":"cassandra",
             "connect.cassandra.password":"cassandra",
-            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders",
+            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders"
         }   
     }'
