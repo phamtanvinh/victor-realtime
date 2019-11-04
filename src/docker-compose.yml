@@ -76,7 +76,7 @@ services:
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'True'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10  
 
-  es:
+  es6:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.8.4
     ports:
      - 9200:9200
@@ -84,6 +84,8 @@ services:
       http.host: '0.0.0.0'
       transport.host: '127.0.0.1'
       xpack.security.enabled: 'false'
+    volumes:
+      - es6_data:/usr/share/elasticsearch/data
 
   es7:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
@@ -93,17 +95,19 @@ services:
       http.host: '0.0.0.0'
       transport.host: '127.0.0.1'
       xpack.security.enabled: 'false'
+    volumes:
+      - es7_data:/usr/share/elasticsearch/data
 
   kibana:
     image: docker.elastic.co/kibana/kibana:6.8.4
     ports: 
       - 5601:5601
     depends_on: 
-      - es
+      - es6
     links: 
-      - es
+      - es6:elasticsearch
     environment: 
-      ELASTICSEARCH_HOSTS: http://es:9200
+      ELASTICSEARCH_HOSTS: http://es6:9200
   
   cassandra:
     image: victor/cassandra
@@ -136,7 +140,7 @@ services:
       - schema-registry
       - mysql
       - postgres
-      - es
+      - es6
     environment:
       BOOTSTRAP_SERVERS: broker:9092
       GROUP_ID: 1
@@ -148,4 +152,6 @@ services:
 
 volumes: 
   pg_data: {}
+  es6_data: {}
+  es7_data: {}
   cassandra_data: {}
