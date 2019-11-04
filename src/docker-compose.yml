@@ -85,6 +85,15 @@ services:
       transport.host: '127.0.0.1'
       xpack.security.enabled: 'false'
 
+  es7:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
+    ports:
+     - 29200:9200
+    environment:
+      http.host: '0.0.0.0'
+      transport.host: '127.0.0.1'
+      xpack.security.enabled: 'false'
+
   kibana:
     image: docker.elastic.co/kibana/kibana:6.8.4
     ports: 
@@ -136,7 +145,6 @@ services:
       OFFSET_STORAGE_TOPIC: my_connect_offset
       STATUS_STORAGE_TOPIC: my_source_connect_status
       KAFKA_CONNECT_PLUGINS_DIR: /kafka/connect,/kafka/plugins
-
 
 volumes: 
   pg_data: {}

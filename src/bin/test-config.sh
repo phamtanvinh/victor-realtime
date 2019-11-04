@@ -89,6 +89,8 @@ curl -i -X POST http://localhost:8083/connectors/ \
         }
     }'
 
+
+
 # Sink configs
 
 # elasticsearch sink
@@ -141,6 +143,31 @@ curl -i -X POST http://localhost:8083/connectors/ \
     }'
 
 
+
+curl -X DELETE http://localhost:8083/connectors/sink-es7-customers
+curl -i -X POST http://localhost:8083/connectors/ \
+     -H "Accept:application/json" \
+     -H  "Content-Type:application/json" \
+     -d '
+    {
+        "name": "sink-es7-customers",
+        "config": {
+            "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+            "tasks.max": "1",
+            "topics": "customers",
+            "connection.url": "http://es7:29200",
+            "transforms": "unwrap,key",
+            "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+            "transforms.unwrap.drop.tombstones": "false",
+            "transforms.key.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+            "transforms.key.field": "id",
+            "key.ignore": "false",
+            "type.name": "customer",
+            "behavior.on.null.values": "delete"
+        }
+    }'
+
+
 # postgres sink
 curl -X DELETE http://localhost:8083/connectors/sink-pg-customers
 curl -i -X POST http://localhost:8083/connectors/ \
@@ -167,13 +194,13 @@ curl -i -X POST http://localhost:8083/connectors/ \
 
 
 # cassandra sink
-curl -X DELETE http://localhost:8083/connectors/sink-cassandra-demo
+curl -X DELETE http://localhost:8083/connectors/sink-cassandra-orders
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
      -H  "Content-Type:application/json" \
      -d '
      {
-        "name": "sink-cassandra-demo",
+        "name": "sink-cassandra-orders",
         "config": {
             "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
             "tasks.max":"1",
@@ -188,7 +215,5 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "connect.cassandra.username":"cassandra",
             "connect.cassandra.password":"cassandra",
             "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders",
-            "type.name":"record",
-            "name":"sink-cassandra-demo"
         }   
     }'
