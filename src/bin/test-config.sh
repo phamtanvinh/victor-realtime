@@ -155,14 +155,15 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
             "tasks.max": "1",
             "topics": "customers",
-            "connection.url": "http://es7:29200",
+            "type.name": "customers",
+            "connection.url": "http://es7:9200",
             "transforms": "unwrap,key",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "false",
             "transforms.key.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
             "transforms.key.field": "id",
             "key.ignore": "false",
-            "type.name": "customer",
+            "behavior.on.malformed.documents": "warn",
             "behavior.on.null.values": "delete"
         }
     }'
