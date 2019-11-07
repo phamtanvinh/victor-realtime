@@ -23,12 +23,15 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "database.whitelist": "demo",
             "database.history.kafka.bootstrap.servers": "broker:9092",
             "database.history.kafka.topic": "schema-changes.demo",
-            "transforms": "unwrap",
-            "transforms.unwrap.type": "io.debezium.transforms.UnwrapFromEnvelope",
             "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schemas.enable": "false",
             "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "value.converter.schemas.enable": "false"
+            "value.converter.schemas.enable": "false",
+            "transforms": "unwrap,route",
+            "transforms.unwrap.type": "io.debezium.transforms.UnwrapFromEnvelope",
+            "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+            "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+            "transforms.route.replacement": "$3"
         }
     }'
 
@@ -52,7 +55,7 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "connect.cassandra.key.space": "demo",
             "connect.cassandra.username":"cassandra",
             "connect.cassandra.password":"cassandra",
-            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from mysqlserver.demo.orders"
+            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders"
         }   
     }'
     
@@ -75,11 +78,73 @@ docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'insert int
 docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'insert into orders values ( 7, "2016-05-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);'
 docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'insert into orders values ( 8, "2016-05-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);'
 docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'insert into orders values ( 9, "2016-05-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);'
+docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'insert into orders values ( 10, "2019-11-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);'
+docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'insert into orders values ( 12, "2019-11-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);'
 
 
+##########################################################################################
+#
+#   mysql to cassandra using avro
+#
+##########################################################################################
 
+curl -X DELETE  http://localhost:8083/connectors/source-mysql-unwrap
+curl -i -X POST http://localhost:8083/connectors/ \
+     -H "Accept:application/json" \
+     -H "Content-Type:application/json" \
+     -d '
+    {
+        "name": "source-mysql-unwrap",
+        "config": {
+            "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+            "tasks.max": "1",
+            "database.hostname": "mysql",
+            "database.port": "3306",
+            "database.user": "debezium",
+            "database.password": "dbz",
+            "database.server.id": "191031",
+            "database.server.name": "mysqlserver",
+            "database.whitelist": "demo",
+            "database.history.kafka.bootstrap.servers": "broker:9092",
+            "database.history.kafka.topic": "schema-changes.demo",
+            "key.converter": "io.confluent.connect.avro.AvroConverter",
+            "key.converter.schemas.enable": "true",
+            "value.converter": "io.confluent.connect.avro.AvroConverter",
+            "value.converter.schemas.enable": "true",
+            "key.converter.schema.registry.url":"http://schema-registry:8081",
+            "value.converter.schema.registry.url":"http://schema-registry:8081",
+            "transforms": "unwrap,route",
+            "transforms.unwrap.type": "io.debezium.transforms.UnwrapFromEnvelope",
+            "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+            "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+            "transforms.route.replacement": "$3"
+        }
+    }'
 
-
+curl -X DELETE http://localhost:8083/connectors/sink-cassandra-orders
+curl -i -X POST http://localhost:8083/connectors/ \
+     -H "Accept:application/json" \
+     -H  "Content-Type:application/json" \
+     -d '
+     {
+        "name": "sink-cassandra-orders",
+        "config": {
+            "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
+            "tasks.max":"1",
+            "topics": "mysqlserver.demo.orders",
+            "key.converter": "io.confluent.connect.avro.AvroConverter",
+            "key.converter.schema.registry.url":"http://schema-registry:8081",
+            "value.converter": "io.confluent.connect.avro.AvroConverter",
+            "value.converter.schema.registry.url":"http://schema-registry:8081",
+            "connect.cassandra.contact.points":"cassandra",
+            "connect.cassandra.port": "9042",
+            "connect.cassandra.key.space": "demo",
+            "connect.cassandra.username":"cassandra",
+            "connect.cassandra.password":"cassandra",
+            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders"
+        }   
+    }'
+    
 ##########################################################################################
 #
 #   Simple sink with avro
@@ -145,12 +210,13 @@ docker-compose exec broker kafka-console-consumer \
     --bootstrap-server broker:9092 \
     --from-beginning \
     --property print.key=true \
-    --topic mysqlserver.demo.orders
+    --topic orders
 
 
 # avro consumer
 docker-compose exec schema-registry /usr/bin/kafka-avro-console-consumer \
     --bootstrap-server broker:9092 \
+    --from-beginning \
     --property print.key=true \
     --property schema.registry.url=http://schema-registry:8081 \
-    --topic mysqlserver.demo.orders
+    --topic orders

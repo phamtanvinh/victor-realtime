@@ -75,6 +75,25 @@ services:
       - zookeeper
     environment:
       ZK_HOSTS: zookeeper:2181
+  
+  ksql-server:
+    image: confluentinc/cp-ksql-server
+    depends_on:
+      - broker
+      - schema-registry
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: broker:9092
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      
+  ksql-cli:
+    image: confluentinc/cp-ksql-cli
+    depends_on:
+      - ksql-server
+    entrypoint: /bin/sh
+    tty: true    
+    
+
 
 #####################################################
 # Database Area
