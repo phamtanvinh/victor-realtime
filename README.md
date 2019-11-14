@@ -94,25 +94,25 @@ curl -i -X POST http://localhost:8083/connectors/ \
 
 ##### Setup Sink Connectors
 - ES subscribes **customers** topic from demo schema of mysql source
-```shell
+```sh
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
      -H  "Content-Type:application/json" \
      -d '
-    {
-        "name": "sink-es-customers",
+     {
+        "name": "sink-es-testtable",
         "config": {
             "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
             "tasks.max": "1",
-            "topics": "customers",
+            "topics": "testtable",
+            "type.name": "testtable",
             "connection.url": "http://es6:9200",
             "transforms": "unwrap,key",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "false",
             "transforms.key.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
-            "transforms.key.field": "id",
+            "transforms.key.field": "test_id",
             "key.ignore": "false",
-            "type.name": "customer",
             "behavior.on.null.values": "delete"
         }
     }'
@@ -165,7 +165,7 @@ docker-compose exec schema-registry /usr/bin/kafka-avro-console-consumer \
 
 - Test elasticsearch
 ```sh
-curl localhost:9200/customers/_search
+curl localhost:9200/testtable/_search
 ```
 
 - Test cassandra
