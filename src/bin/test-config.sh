@@ -89,6 +89,8 @@ curl -i -X POST http://localhost:8083/connectors/ \
         }
     }'
 
+
+
 # Sink configs
 
 # elasticsearch sink
@@ -104,7 +106,7 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "tasks.max": "1",
             "topics": "testtable",
             "type.name": "testtable",
-            "connection.url": "http://es:9200",
+            "connection.url": "http://es6:9200",
             "transforms": "unwrap,key",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "false",
@@ -128,7 +130,7 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
             "tasks.max": "1",
             "topics": "customers",
-            "connection.url": "http://es:9200",
+            "connection.url": "http://es6:9200",
             "transforms": "unwrap,key",
             "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
             "transforms.unwrap.drop.tombstones": "false",
@@ -136,6 +138,32 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "transforms.key.field": "id",
             "key.ignore": "false",
             "type.name": "customer",
+            "behavior.on.null.values": "delete"
+        }
+    }'
+
+
+
+curl -X DELETE http://localhost:8083/connectors/sink-es7-customers
+curl -i -X POST http://localhost:8083/connectors/ \
+     -H "Accept:application/json" \
+     -H  "Content-Type:application/json" \
+     -d '
+    {
+        "name": "sink-es7-customers",
+        "config": {
+            "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+            "tasks.max": "1",
+            "topics": "customers",
+            "type.name": "customers",
+            "connection.url": "http://es7:9200",
+            "transforms": "unwrap,key",
+            "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+            "transforms.unwrap.drop.tombstones": "false",
+            "transforms.key.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+            "transforms.key.field": "id",
+            "key.ignore": "false",
+            "behavior.on.malformed.documents": "warn",
             "behavior.on.null.values": "delete"
         }
     }'
@@ -167,28 +195,26 @@ curl -i -X POST http://localhost:8083/connectors/ \
 
 
 # cassandra sink
-curl -X DELETE http://localhost:8083/connectors/sink-cassandra-demo
+curl -X DELETE http://localhost:8083/connectors/sink-cassandra-orders
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
      -H  "Content-Type:application/json" \
      -d '
      {
-        "name": "sink-cassandra-demo",
+        "name": "sink-cassandra-orders",
         "config": {
             "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
             "tasks.max":"1",
-            "topics":"orders",
-            "key.converter":"io.confluent.connect.avro.AvroConverter",
+            "topics":"mysqlserver.demo.orders",
+            "key.converter": "org.apache.kafka.connect.json.JsonConverter",
             "key.converter.schema.registry.url":"http://schema-registry:8081",
-            "value.converter":"io.confluent.connect.avro.AvroConverter",
+            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
             "value.converter.schema.registry.url":"http://schema-registry:8081",
             "connect.cassandra.contact.points":"cassandra",
             "connect.cassandra.port": "9042",
             "connect.cassandra.key.space": "demo",
             "connect.cassandra.username":"cassandra",
             "connect.cassandra.password":"cassandra",
-            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders",
-            "type.name":"record",
-            "name":"sink-cassandra-demo"
+            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders"
         }   
     }'

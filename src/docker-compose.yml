@@ -1,6 +1,9 @@
 version: "3"
 
 services:
+#####################################################
+# Kafka Area
+#####################################################
   zookeeper: 
     image: confluentinc/cp-zookeeper:latest
     ports:
@@ -33,11 +36,68 @@ services:
     ports:
       - 8081:8081
     environment:
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker:9092
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker:9092
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+  connect:
+    image: victor/connect
+    build:
+      context: ./connect
+    ports:
+      - 8083:8083
+      - 5005:5005
+    links:
+      - broker
+      - schema-registry
+    environment:
+      BOOTSTRAP_SERVERS: broker:9092
+      GROUP_ID: 1
+      ADVERTISED_HOST_NAME: connect
+      CONFIG_STORAGE_TOPIC: my_connect_configs
+      OFFSET_STORAGE_TOPIC: my_connect_offset
+      STATUS_STORAGE_TOPIC: my_source_connect_status
+      KAFKA_CONNECT_PLUGINS_DIR: /kafka/connect,/kafka/plugins
+  
+  # take a lot of time to build, you can disable below service if unnecessary
+  kafka-manager:
+    image: victor/kafka-manager
+    build:
+      context: ./kafka-manager
+      args:
+        KM_VERSION: 2.0.0.2
+    ports:
+      - 29000:9000
+    depends_on:
+      - zookeeper
+    links:
+      - zookeeper
+    environment:
+      ZK_HOSTS: zookeeper:2181
+  
+  ksql-server:
+    image: confluentinc/cp-ksql-server
+    depends_on:
+      - broker
+      - schema-registry
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: broker:9092
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      
+  ksql-cli:
+    image: confluentinc/cp-ksql-cli
+    depends_on:
+      - ksql-server
+    entrypoint: /bin/sh
+    tty: true    
     
+
+
+#####################################################
+# Database Area
+#####################################################
   mysql:
     image: victor/mysql
     build:
@@ -49,6 +109,8 @@ services:
       MYSQL_ROOT_PASSWORD: Aa123456
       MYSQL_USER: mysqluser
       MYSQL_PASSWORD: mysqlpw
+    volumes:
+      - mysql_data:/var/lib/mysql
   
   postgres:
     image: victor/postgres
@@ -75,27 +137,56 @@ services:
       PGADMIN_DEFAULT_PASSWORD: Aa123456
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'True'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10  
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
 
-  es:
+  es6:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.8.4
     ports:
      - 9200:9200
     environment:
-      http.host: '0.0.0.0'
-      transport.host: '127.0.0.1'
+      http.host: 0.0.0.0
+      transport.host: 127.0.0.1
       xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    volumes:
+      - es6_data:/usr/share/elasticsearch/data
 
   kibana:
     image: docker.elastic.co/kibana/kibana:6.8.4
     ports: 
       - 5601:5601
     depends_on: 
-      - es
+      - es6
     links: 
-      - es
+      - es6
     environment: 
-      ELASTICSEARCH_HOSTS: http://es:9200
+      ELASTICSEARCH_HOSTS: http://es6:9200
+
+  es7:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
+    ports:
+     - 29200:9200
+    environment:
+      discovery.type: single-node
+      http.host: 0.0.0.0
+      transport.host: 127.0.0.1
+      xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    volumes:
+      - es7_data:/usr/share/elasticsearch/data
   
+  kibana7:
+    image: docker.elastic.co/kibana/kibana:7.4.2
+    ports: 
+      - 25601:5601
+    depends_on: 
+      - es7
+    links: 
+      - es7
+    environment: 
+      ELASTICSEARCH_HOSTS: http://es7:9200  
+      
   cassandra:
     image: victor/cassandra
     build:
@@ -115,29 +206,10 @@ services:
     ulimits:
       nproc: 1024
 
-  connect:
-    image: victor/connect
-    build:
-      context: ./connect
-    ports:
-      - 8083:8083
-      - 5005:5005
-    links:
-      - broker
-      - schema-registry
-      - mysql
-      - postgres
-      - es
-    environment:
-      BOOTSTRAP_SERVERS: broker:9092
-      GROUP_ID: 1
-      ADVERTISED_HOST_NAME: connect
-      CONFIG_STORAGE_TOPIC: my_connect_configs
-      OFFSET_STORAGE_TOPIC: my_connect_offset
-      STATUS_STORAGE_TOPIC: my_source_connect_status
-      KAFKA_CONNECT_PLUGINS_DIR: /kafka/connect,/kafka/plugins
-
-
 volumes: 
+  mysql_data: {}
   pg_data: {}
+  es6_data: {}
+  es7_data: {}
   cassandra_data: {}
+  pgadmin_data: {}
