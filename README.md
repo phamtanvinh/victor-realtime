@@ -1,6 +1,6 @@
-# REALTIME REARCH WITH KAFKA
+# REALTIME RESEARCH WITH KAFKA
 
-This is a sample to setup kafka for streaming data between databases such as RDBMS and NoSQL. I use **Confluent Kafka** with connectors of thirth parties, such as **debezium** and **lenses**.
+This is a sample to setup kafka for streaming data between databases such as RDBMS and NoSQL. I use **Confluent Kafka** with connectors of third parties, such as **debezium** and **lenses**.
 
 #### Technical
 
