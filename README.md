@@ -14,7 +14,7 @@ This is a sample to setup kafka for streaming data between databases such as RDB
 
 #### How to setup
 
-- Bring up all containers: `docker-compose up -d`
+- Bring up all containers: `cd victor-realtime/src && docker-compose up -d`
 - Initialize database for Cassandra:
   + Access cassandra container: `docker-compose exec cassandra cqlsh`
   + Pass code below to prompt window:
@@ -34,10 +34,10 @@ WITH CLUSTERING ORDER BY (created ASC);
 ```shell
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
-     -H  "Content-Type:application/json" \
+     -H "Content-Type:application/json" \
      -d '
     {
-        "name": "source-mysql-demo",
+        "name": "source-mysql-unwrap",
         "config": {
             "connector.class": "io.debezium.connector.mysql.MySqlConnector",
             "tasks.max": "1",
@@ -51,12 +51,13 @@ curl -i -X POST http://localhost:8083/connectors/ \
             "database.history.kafka.bootstrap.servers": "broker:9092",
             "database.history.kafka.topic": "schema-changes.demo",
             "key.converter": "io.confluent.connect.avro.AvroConverter",
-            "key.converter.schema.registry.url": "http://schema-registry:8081",
+            "key.converter.schemas.enable": "true",
             "value.converter": "io.confluent.connect.avro.AvroConverter",
-            "value.converter.schema.registry.url": "http://schema-registry:8081",
-            "internal.key.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "internal.value.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "transforms": "route",
+            "value.converter.schemas.enable": "true",
+            "key.converter.schema.registry.url":"http://schema-registry:8081",
+            "value.converter.schema.registry.url":"http://schema-registry:8081",
+            "transforms": "unwrap,route",
+            "transforms.unwrap.type": "io.debezium.transforms.UnwrapFromEnvelope",
             "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
             "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
             "transforms.route.replacement": "$3"
@@ -65,30 +66,28 @@ curl -i -X POST http://localhost:8083/connectors/ \
 ```
 
 - Postgres Source publishes schema ***test***
-```shell
+```sh
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
      -H  "Content-Type:application/json" \
      -d '
-    {
-        "name": "source-pg-test",
+     {
+        "name": "sink-cassandra-orders",
         "config": {
-            "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-            "tasks.max": "1",
-            "database.hostname": "postgres",
-            "database.port": "5432",
-            "database.user": "postgresuser",
-            "database.password": "postgrespw",
-            "database.dbname" : "inventory",
-            "database.server.name": "pgserver",
-            "schema.whitelist": "test",
-            "database.history.kafka.bootstrap.servers": "broker:9092",
-            "database.history.kafka.topic": "schema-changes.test",
-            "transforms": "route",
-            "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
-            "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
-            "transforms.route.replacement": "$3"
-        }
+            "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
+            "tasks.max":"1",
+            "topics": "orders",
+            "key.converter": "io.confluent.connect.avro.AvroConverter",
+            "key.converter.schema.registry.url":"http://schema-registry:8081",
+            "value.converter": "io.confluent.connect.avro.AvroConverter",
+            "value.converter.schema.registry.url":"http://schema-registry:8081",
+            "connect.cassandra.contact.points":"cassandra",
+            "connect.cassandra.port": "9042",
+            "connect.cassandra.key.space": "demo",
+            "connect.cassandra.username":"cassandra",
+            "connect.cassandra.password":"cassandra",
+            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders"
+        }   
     }'
 ```
 
@@ -117,28 +116,29 @@ curl -i -X POST http://localhost:8083/connectors/ \
         }
     }'
 ```
-- Cassandra subscribes **customers** topic from database demo
-```shell
+- Cassandra subscribes **orders** topic from database demo
+```sh
 curl -i -X POST http://localhost:8083/connectors/ \
      -H "Accept:application/json" \
      -H  "Content-Type:application/json" \
      -d '
-    {
-        "name": "sink-es-customers",
+     {
+        "name": "sink-cassandra-orders",
         "config": {
-            "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-            "tasks.max": "1",
-            "topics": "customers",
-            "connection.url": "http://es6:9200",
-            "transforms": "unwrap,key",
-            "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-            "transforms.unwrap.drop.tombstones": "false",
-            "transforms.key.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
-            "transforms.key.field": "id",
-            "key.ignore": "false",
-            "type.name": "customer",
-            "behavior.on.null.values": "delete"
-        }
+            "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
+            "tasks.max":"1",
+            "topics":"orders",
+            "key.converter": "io.confluent.connect.avro.AvroConverter",
+            "key.converter.schema.registry.url":"http://schema-registry:8081",
+            "value.converter": "io.confluent.connect.avro.AvroConverter",
+            "value.converter.schema.registry.url":"http://schema-registry:8081",
+            "connect.cassandra.contact.points":"cassandra",
+            "connect.cassandra.port": "9042",
+            "connect.cassandra.key.space": "demo",
+            "connect.cassandra.username":"cassandra",
+            "connect.cassandra.password":"cassandra",
+            "connect.cassandra.kcql": "INSERT INTO orders SELECT * from orders"
+        }   
     }'
 ```
 
@@ -173,4 +173,10 @@ curl localhost:9200/testtable/_search
 docker-compose exec cassandra csqlsh
 > use demo;
 > select * from orders;
+```
+
+- Update mysql source
+```sh
+docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'insert into orders values ( 3, "2016-05-06 13:53:00", "OP-DAX-P-20150201-95.7", 94.2, 100);' 
+docker-compose exec mysql mysql demo -umysqluser -pmysqlpw --execute 'update orders set qty=99 where id = 2;'
 ```

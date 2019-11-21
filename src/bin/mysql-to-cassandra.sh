@@ -131,7 +131,7 @@ curl -i -X POST http://localhost:8083/connectors/ \
         "config": {
             "connector.class":"com.datamountaineer.streamreactor.connect.cassandra.sink.CassandraSinkConnector",
             "tasks.max":"1",
-            "topics": "mysqlserver.demo.orders",
+            "topics": "orders",
             "key.converter": "io.confluent.connect.avro.AvroConverter",
             "key.converter.schema.registry.url":"http://schema-registry:8081",
             "value.converter": "io.confluent.connect.avro.AvroConverter",
